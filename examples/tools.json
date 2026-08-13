@@ -1,0 +1,36 @@
+[
+  {
+    "name": "set_light_brightness",
+    "description": "Set the brightness of a named light or room to a percentage.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room": {
+          "type": "string",
+          "description": "The room or light name, e.g. 'living room'."
+        },
+        "brightness": {
+          "type": "integer",
+          "description": "Brightness percentage from 0 to 100.",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": ["room", "brightness"]
+    }
+  },
+  {
+    "name": "get_weather",
+    "description": "Get the current weather for a given city.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "The city to get weather for."
+        }
+      },
+      "required": ["city"]
+    }
+  }
+]

@@ -1,0 +1,4 @@
+node_modules/
+vendor/models/
+vendor/tokenizer/
+.serena/

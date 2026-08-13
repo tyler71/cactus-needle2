@@ -1,0 +1,37 @@
+{
+  "name": "@tyler71/cactus-needle2",
+  "version": "1.0.0",
+  "description": "Vendored WASM build of Cactus Compute's Needle 2 tool-calling model, with a minimal JS wrapper.",
+  "main": "src/needle.mjs",
+  "type": "module",
+  "exports": {
+    ".": "./src/needle.mjs"
+  },
+  "types": "./src/needle.d.ts",
+  "scripts": {
+    "demo": "node examples/demo.mjs"
+  },
+  "files": [
+    "src",
+    "vendor/wasm",
+    "vendor/LICENSE-needle2",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["needle", "wasm", "tool-calling", "llm"],
+  "author": "",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tyler71/cactus-needle2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tyler71/cactus-needle2/issues"
+  },
+  "homepage": "https://github.com/tyler71/cactus-needle2#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}
