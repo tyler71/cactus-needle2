@@ -1,6 +1,6 @@
 {
   "name": "@tyler71/cactus-needle2",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Vendored WASM build of Cactus Compute's Needle 2 tool-calling model, with a minimal JS wrapper.",
   "main": "src/needle.mjs",
   "type": "module",
@@ -9,7 +9,8 @@
   },
   "types": "./src/needle.d.ts",
   "scripts": {
-    "demo": "node examples/demo.mjs"
+    "demo": "node examples/demo.mjs",
+    "demo:agent": "node examples/agent-demo.mjs"
   },
   "files": [
     "src",

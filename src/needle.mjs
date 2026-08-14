@@ -47,7 +47,20 @@ export async function createNeedleEngine() {
     }
   }
 
-  async function loadModelBytes(blob) {
+  // The WASM module is a single shared instance; only one call may touch it
+  // at a time. This FIFO queue serializes every public operation so
+  // concurrent callers can't interleave each other's WASM state.
+  let queue = Promise.resolve();
+  function enqueue(fn) {
+    const run = queue.then(fn, fn);
+    queue = run.then(
+      () => {},
+      () => {},
+    );
+    return run;
+  }
+
+  async function loadModelBytesUnlocked(blob) {
     if (!(blob instanceof Blob)) {
       throw new TypeError("loadModelBytes expects a Blob");
     }
@@ -65,7 +78,7 @@ export async function createNeedleEngine() {
     }
   }
 
-  function init(systemPrompt, toolsJson, toolIndexPath = "") {
+  function initUnlocked(systemPrompt, toolsJson, toolIndexPath = "") {
     const toolsStr =
       typeof toolsJson === "string" ? toolsJson : JSON.stringify(toolsJson);
     const rc = _init(systemPrompt ?? "", toolsStr, toolIndexPath ?? "");
@@ -75,7 +88,11 @@ export async function createNeedleEngine() {
     return rc;
   }
 
-  function complete(input, maxTokens = 256, outCapacity = DEFAULT_OUT_CAPACITY) {
+  function completeUnlocked(
+    input,
+    maxTokens = 256,
+    outCapacity = DEFAULT_OUT_CAPACITY,
+  ) {
     const outPtr = Module._malloc(outCapacity);
     try {
       const rc = _complete(input, maxTokens, outPtr, outCapacity);
@@ -88,11 +105,51 @@ export async function createNeedleEngine() {
     }
   }
 
-  function reset() {
+  function resetUnlocked() {
     _reset();
   }
 
-  return { loadModelBytes, init, complete, reset };
+  function loadModelBytes(blob) {
+    return enqueue(() => loadModelBytesUnlocked(blob));
+  }
+
+  // Session-oriented primitives, queued but *not* auto-reset: unlike run(),
+  // these let a caller keep one init() alive across several complete()
+  // calls (multi-turn tool-calling sessions), only reset()-ing at
+  // conversation boundaries. Still serialized through the same queue as
+  // run()/loadModelBytes(), so sessions and one-shot calls can't interleave.
+  function init(systemPrompt, toolsJson, toolIndexPath = "") {
+    return enqueue(() => initUnlocked(systemPrompt, toolsJson, toolIndexPath));
+  }
+
+  function complete(input, maxTokens, outCapacity) {
+    return enqueue(() => completeUnlocked(input, maxTokens, outCapacity));
+  }
+
+  function reset() {
+    return enqueue(() => resetUnlocked());
+  }
+
+  // Stateless per call, like needle-rs v1's `run(prompt, toolsJson)`: each
+  // call does init -> complete -> reset as one atomic unit against the
+  // shared WASM instance, so no session state is ever left for another
+  // queued call to observe. reset() always runs, even on failure, so a
+  // failed call can't leave dangling state behind.
+  function run(systemPrompt, toolsJson, input, options = {}) {
+    const { toolIndexPath, maxTokens, outCapacity } = options;
+    return enqueue(() => {
+      try {
+        initUnlocked(systemPrompt, toolsJson, toolIndexPath);
+        return completeUnlocked(input, maxTokens, outCapacity);
+      } finally {
+        resetUnlocked();
+      }
+    });
+  }
+
+  return { loadModelBytes, run, init, complete, reset };
 }
+
+export { tool, createNeedle, extract, formatSystemFacts } from "./agent.mjs";
 
 export default createNeedleEngine;

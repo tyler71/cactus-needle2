@@ -16,9 +16,12 @@ async function main() {
 
   const engine = await createNeedleEngine();
   await engine.loadModelBytes(modelBlob);
-  engine.init("You are a helpful home-automation assistant.", toolsJson);
 
-  const result = engine.complete("dim the living room to 30");
+  const result = await engine.run(
+    "You are a helpful home-automation assistant.",
+    toolsJson,
+    "dim the living room to 30",
+  );
   console.log(result);
 }
 
