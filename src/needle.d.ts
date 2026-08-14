@@ -1,6 +1,6 @@
 export interface NeedleEngine {
   /** Loads a compiled `.cact` model artifact into the wasm runtime. Throws on failure. */
-  loadModelBytes(bytes: Uint8Array): number;
+  loadModelBytes(blob: Blob): Promise<number>;
 
   /** Initializes a session with a system prompt and a JSON (or JSON-string) tool schema list. */
   init(systemPrompt: string, toolsJson: string | unknown[], toolIndexPath?: string): number;

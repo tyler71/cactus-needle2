@@ -47,10 +47,11 @@ export async function createNeedleEngine() {
     }
   }
 
-  function loadModelBytes(bytes) {
-    if (!(bytes instanceof Uint8Array)) {
-      throw new TypeError("loadModelBytes expects a Uint8Array");
+  async function loadModelBytes(blob) {
+    if (!(blob instanceof Blob)) {
+      throw new TypeError("loadModelBytes expects a Blob");
     }
+    const bytes = new Uint8Array(await blob.arrayBuffer());
     const ptr = Module._malloc(bytes.length);
     try {
       Module.HEAPU8.set(bytes, ptr);

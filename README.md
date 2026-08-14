@@ -12,14 +12,14 @@ This package ships the compiled WASM runtime (`vendor/wasm/`) and the JS wrapper
 
 ## Getting the model
 
-Download these files from Cactus Compute's Hugging Face repo:
+`loadModelBytes()` takes a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) containing the compiled `.cact` model — it doesn't matter how you obtain it: `fetch(url).blob()`, a browser `<input type="file">`, IndexedDB, or `new Blob([readFileSync(path)])` for a local file all work.
+
+The model weights and tokenizer assets are published on Cactus Compute's Hugging Face repo:
 
 https://huggingface.co/Cactus-Compute/needle2/tree/main
 
 - `needle2.cact` — the model weights, loaded at runtime via `loadModelBytes()`
-- `tokenizer.model` / `tokenizer.vocab` — tokenizer assets
-
-Place `needle2.cact` wherever your application reads it from (see usage below).
+- `tokenizer.model` / `tokenizer.vocab` — tokenizer assets (not currently consumed by this JS API)
 
 ## Usage
 
@@ -27,7 +27,9 @@ Place `needle2.cact` wherever your application reads it from (see usage below).
 import { readFileSync } from "node:fs";
 import { createNeedleEngine } from "@tyler71/cactus-needle2";
 
-const modelBytes = new Uint8Array(readFileSync("./needle2.cact"));
+const modelBlob = await fetch(
+  "https://huggingface.co/Cactus-Compute/needle2/resolve/main/needle2.cact",
+).then((r) => r.blob());
 
 const tools = [
   {
@@ -44,7 +46,7 @@ const tools = [
 ];
 
 const engine = await createNeedleEngine();
-engine.loadModelBytes(modelBytes);
+await engine.loadModelBytes(modelBlob);
 engine.init("You are a helpful assistant.", tools);
 
 const result = engine.complete("what's the weather in Paris?");

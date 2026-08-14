@@ -5,15 +5,17 @@ import { createNeedleEngine } from "../src/needle.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Any source that yields a Blob works here (fetch, a browser file input, IndexedDB, etc.)
+const MODEL_URL = "https://huggingface.co/Cactus-Compute/needle2/resolve/main/needle2.cact";
+
 async function main() {
-  const modelPath = path.join(__dirname, "..", "vendor", "models", "needle2.cact");
   const toolsPath = path.join(__dirname, "tools.json");
 
-  const modelBytes = new Uint8Array(readFileSync(modelPath));
+  const modelBlob = await fetch(MODEL_URL).then((r) => r.blob());
   const toolsJson = readFileSync(toolsPath, "utf8");
 
   const engine = await createNeedleEngine();
-  engine.loadModelBytes(modelBytes);
+  await engine.loadModelBytes(modelBlob);
   engine.init("You are a helpful home-automation assistant.", toolsJson);
 
   const result = engine.complete("dim the living room to 30");
